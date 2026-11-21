@@ -58,6 +58,15 @@ describe('durable completed-child links',()=>{
       expect(delegateRowsFromCall({tasks:[{goal:'g'}]},{results:[{status:'completed',...entry}]},'call')[0].sessionId).toBe('s')
     }
   })
+  it('does not render phantom children for rejected calls before a successful retry',()=>{
+    const args={tasks:[{goal:'same goal'}]}
+    expect(delegateRowsFromCall(args,{status:'rejected'},'rejected-call')).toEqual([])
+    expect(delegateRowsFromCall(args,{error:'capacity'},'error-call')).toEqual([])
+    expect(delegateRowsFromCall(args,JSON.stringify({error:'capacity'}),'json-error-call')).toEqual([])
+    expect(delegateRowsFromCall(args,{status:'dispatched',subagent_ids:['real-child']},'successful-call')).toMatchObject([{goal:'same goal',subagentId:'real-child',status:'dispatched'}])
+    expect(delegateRowsFromCall(args,undefined,'pending-call')).toMatchObject([{status:'running'}])
+    expect(delegateRowsFromCall(args,{results:[{status:'failed'}]},'failed-child')).toMatchObject([{status:'failed'}])
+  })
   it('a persisted dispatch child ID cannot be hijacked by a same-goal live worker',()=>{
     const foreign={id:'other',sessionId:'wrong',goal:'same goal',status:'running',taskIndex:0} as SubagentProgress
     expect(mergeDelegateRows(completed,[foreign],'call')[0].sessionId).toBe('stored-child')

@@ -622,7 +622,16 @@
  }
  
  /**
-@@ -83,6 +90,8 @@
+@@ -79,10 +86,17 @@
+  * running; the moment a background dispatch answers, they drop to parked.
+  */
+ export function delegateRowsFromCall(args: unknown, result: unknown, toolCallId = ''): DelegateRow[] {
++  // A rejected call never dispatched a child; do not synthesize a parked row.
++  const resultRecord = parseMaybeObject(result)
++  if (result !== undefined && ('error' in resultRecord || field(resultRecord, 'status') === 'rejected')) {
++    return []
++  }
+   const goals = delegateGoals(args)
    const finished = resultRows(result)
    const dispatched = dispatchedGoals(result)
    const titles = goals.length > 0 ? goals : dispatched.length > 0 ? dispatched : finished.map(() => 'Delegated task')
@@ -631,7 +640,7 @@
    const idle: DelegateRowStatus = result === undefined ? 'running' : 'dispatched'
  
    return titles.map((goal, index) => {
-@@ -95,20 +104,28 @@
+@@ -95,20 +109,28 @@
        goal,
        id: `${toolCallId}:${index}`,
        model: entry ? field(entry, 'model') || undefined : undefined,
@@ -663,7 +672,7 @@
    }
  }
  
-@@ -144,14 +161,16 @@
+@@ -144,14 +166,16 @@
    }
  
    const prefix = toolCallId ? `delegate-tool:${toolCallId}:` : ''
@@ -734,7 +743,7 @@
 +}
 --- /dev/null
 +++ b/apps/desktop/src/lib/no-subagent-popup-history.test.ts
-@@ -0,0 +1,65 @@
+@@ -0,0 +1,74 @@
 +import { describe, expect, it } from 'vitest'
 +import type { DelegateRow } from '@/components/assistant-ui/tool/delegate-model'
 +import { delegateRowsFromCall, mergeDelegateRows } from '@/components/assistant-ui/tool/delegate-model'
@@ -794,6 +803,15 @@
 +    for(const entry of [{session_id:'s'},{child_session_id:'s'},{recovery:{child_session_id:'s'}}]){
 +      expect(delegateRowsFromCall({tasks:[{goal:'g'}]},{results:[{status:'completed',...entry}]},'call')[0].sessionId).toBe('s')
 +    }
++  })
++  it('does not render phantom children for rejected calls before a successful retry',()=>{
++    const args={tasks:[{goal:'same goal'}]}
++    expect(delegateRowsFromCall(args,{status:'rejected'},'rejected-call')).toEqual([])
++    expect(delegateRowsFromCall(args,{error:'capacity'},'error-call')).toEqual([])
++    expect(delegateRowsFromCall(args,JSON.stringify({error:'capacity'}),'json-error-call')).toEqual([])
++    expect(delegateRowsFromCall(args,{status:'dispatched',subagent_ids:['real-child']},'successful-call')).toMatchObject([{goal:'same goal',subagentId:'real-child',status:'dispatched'}])
++    expect(delegateRowsFromCall(args,undefined,'pending-call')).toMatchObject([{status:'running'}])
++    expect(delegateRowsFromCall(args,{results:[{status:'failed'}]},'failed-child')).toMatchObject([{status:'failed'}])
 +  })
 +  it('a persisted dispatch child ID cannot be hijacked by a same-goal live worker',()=>{
 +    const foreign={id:'other',sessionId:'wrong',goal:'same goal',status:'running',taskIndex:0} as SubagentProgress

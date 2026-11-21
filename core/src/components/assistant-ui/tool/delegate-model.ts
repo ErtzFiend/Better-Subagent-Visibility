@@ -86,6 +86,11 @@ function dispatchedGoals(result: unknown): string[] {
  * running; the moment a background dispatch answers, they drop to parked.
  */
 export function delegateRowsFromCall(args: unknown, result: unknown, toolCallId = ''): DelegateRow[] {
+  // A rejected call never dispatched a child; do not synthesize a parked row.
+  const resultRecord = parseMaybeObject(result)
+  if (result !== undefined && ('error' in resultRecord || field(resultRecord, 'status') === 'rejected')) {
+    return []
+  }
   const goals = delegateGoals(args)
   const finished = resultRows(result)
   const dispatched = dispatchedGoals(result)

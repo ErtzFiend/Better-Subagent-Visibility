@@ -51,7 +51,7 @@
     },
     "src/components/assistant-ui/tool/delegate-model.ts": {
       "before": "132f057d166a476b63715a7134229b98825dfda9e60b25956063c399bf0bcc2e",
-      "after": "3e99930a2bdff29d95c2b2b8d02c7b5780e18f7a47a30ee40a12cbb414ff6ed4"
+      "after": "eaba8f58993c94c140e3d5c2f62d7309dbb993c62725883aaa88dc215b9c60c1"
     },
     "src/lib/no-subagent-popup-history-runtime.ts": {
       "before": null,
@@ -59,7 +59,7 @@
     },
     "src/lib/no-subagent-popup-history.test.ts": {
       "before": null,
-      "after": "330450777a586721a3e685ee0d6cd79af49662c85289361f829c0f98fdbb7729"
+      "after": "3c846090206697449bef2fb954c4507a597845abf2fdb148cfd9a88b0081632d"
     },
     "src/lib/no-subagent-popup-history.ts": {
       "before": null,
